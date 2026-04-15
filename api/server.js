@@ -5,7 +5,9 @@ import multer from "multer";
 import OpenAI from "openai";
 
 const app = express();
-app.use(cors({ origin: "http://localhost:5173" }));
+const CORS = process.env.CORS;
+
+app.use(cors({ origin: CORS }));
 
 export default app;
 
