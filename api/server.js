@@ -152,6 +152,14 @@ app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
   }
 });
 
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    message: 'Server is running smoothly',
+    timestamp: new Date().toISOString()
+  });
+});
+
 /* ================== START ================== */
 
 if (process.env.NODE_ENV !== 'production') {
