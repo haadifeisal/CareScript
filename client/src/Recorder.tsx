@@ -22,6 +22,54 @@ interface RecorderProps {
   ehrSaved?: boolean;
 }
 
+// Sub-component for the live waveform
+function LiveVisualizer({ stream }: { stream: MediaStream | null }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!stream || !canvasRef.current) return;
+
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(stream);
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    let animationId: number;
+
+    const draw = () => {
+      if (!ctx) return;
+      animationId = requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let x = 0;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = (dataArray[i] / 255) * canvas.height;
+        // Clinical blue/teal gradient
+        ctx.fillStyle = `rgb(59, 130, 246)`; 
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        x += barWidth + 1;
+      }
+    };
+
+    draw();
+    return () => {
+      cancelAnimationFrame(animationId);
+      audioCtx.close();
+    };
+  }, [stream]);
+
+  return <canvas ref={canvasRef} width={200} height={40} className="opacity-60" />;
+}
+
 export default function Recorder({
   onFinished,
   transcript = "",
@@ -53,11 +101,9 @@ export default function Recorder({
       if (spk && !uniq.includes(spk)) uniq.push(spk);
       if (uniq.length === 2) break;
     }
-
     const map = new Map<string, string>();
     if (uniq[0]) map.set(uniq[0], "DOCTOR");
     if (uniq[1]) map.set(uniq[1], "PATIENT");
-
     return (raw?: string) => map.get((raw ?? "").trim()) || "SPEAKER";
   }, [segments]);
 
@@ -72,7 +118,6 @@ export default function Recorder({
           text: (s.text ?? "").trim(),
         }));
     }
-
     const t = transcript.trim();
     return t ? [{ role: "TRANSCRIPT", text: t }] : [];
   }, [segments, transcript, speakerLabel]);
@@ -87,13 +132,11 @@ export default function Recorder({
       window.clearInterval(timerRef.current);
       timerRef.current = null;
     }
-
     try {
       if (recRef.current?.state === "recording") {
         recRef.current.stop();
       }
     } catch {}
-
     stopTracks();
   };
 
@@ -160,23 +203,34 @@ export default function Recorder({
               Record the encounter clearly, then generate a clinical note.
             </p>
           </div>
-
           <span className="pill">{fmt(seconds)}</span>
         </div>
 
-        <div className="my-8 flex justify-center">
-          <div
-            className={[
-              "flex h-24 w-24 items-center justify-center rounded-full border transition",
-              status === "recording"
-                ? "border-red-200 bg-red-50 shadow-[0_0_0_10px_rgba(254,226,226,0.9)]"
-                : "border-blue-200 bg-blue-50",
-            ].join(" ")}
-          >
-            <Mic
-              size={30}
-              className={status === "recording" ? "text-red-600" : "text-blue-600"}
-            />
+        <div className="my-8 flex flex-col items-center gap-4">
+          <div className="relative">
+            {/* Pulsing Outer Glow */}
+            {status === "recording" && (
+              <div className="absolute inset-0 animate-ping rounded-full bg-red-400 opacity-20"></div>
+            )}
+            
+            <div
+              className={[
+                "relative flex h-24 w-24 items-center justify-center rounded-full border transition-all duration-500",
+                status === "recording"
+                  ? "border-red-200 bg-red-50 shadow-[0_0_0_10px_rgba(254,226,226,0.6)] scale-110"
+                  : "border-blue-200 bg-blue-50",
+              ].join(" ")}
+            >
+              <Mic
+                size={30}
+                className={status === "recording" ? "text-red-600 animate-pulse" : "text-blue-600"}
+              />
+            </div>
+          </div>
+
+          {/* Waveform Visualization */}
+          <div className="h-10">
+            {status === "recording" && <LiveVisualizer stream={streamRef.current} />}
           </div>
         </div>
 
@@ -231,7 +285,12 @@ export default function Recorder({
 
         <div className="mt-4 text-center text-sm text-slate-500">
           {status === "ready" && "Ready"}
-          {status === "recording" && "Recording..."}
+          {status === "recording" && (
+            <span className="flex items-center justify-center gap-2 font-medium text-red-600">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-red-600"></span>
+              Live Recording...
+            </span>
+          )}
           {status === "finished" && (
             <span className="inline-flex items-center gap-2 text-emerald-700">
               <CheckCircle2 size={16} />
@@ -262,7 +321,6 @@ export default function Recorder({
       {showPreview && (
         <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">Live preview</h3>
-
           <div className="mt-4 max-h-80 overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4">
             {isTranscribing && preview.length === 0 ? (
               <div className="flex items-center justify-center py-8 text-slate-500">

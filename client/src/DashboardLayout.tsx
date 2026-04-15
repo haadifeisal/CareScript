@@ -33,8 +33,8 @@ export default function DashboardLayout() {
                 <Stethoscope size={20} />
               </div>
               <div>
-                <div className="text-sm font-semibold text-slate-900">MediScriber</div>
-                <div className="text-xs text-slate-500">AI Medical Scribe</div>
+                <div className="text-sm font-semibold text-slate-900">CareScript</div>
+                <div className="text-xs text-slate-500">AI Medical Transription</div>
               </div>
             </div>
           </div>
@@ -65,7 +65,7 @@ export default function DashboardLayout() {
           </nav>
 
           <div className="mt-auto px-5 py-5 text-xs text-slate-400">
-            © {new Date().getFullYear()} MediScriber
+            © {new Date().getFullYear()} CareScript
           </div>
         </aside>
 
@@ -73,7 +73,7 @@ export default function DashboardLayout() {
           <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
             <div className="app-shell flex h-16 items-center justify-between">
               <div>
-                <div className="text-sm font-semibold text-slate-900">AI Medical Scribe</div>
+                <div className="text-sm font-semibold text-slate-900">AI Medical Transcription</div>
                 <div className="text-xs text-slate-500">
                   Clinical documentation workflow
                 </div>

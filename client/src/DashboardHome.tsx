@@ -33,7 +33,7 @@ const DashboardHome: React.FC = () => {
                 Create clean clinical notes—fast.
               </h2>
               <div className="text-muted" style={{ maxWidth: 620, lineHeight: 1.7 }}>
-                Start by adding patient details, then record the encounter. MediScriber transcribes and turns it into a structured note ready for review and export.
+                Start by adding patient details, then record the encounter. CareScript transcribes and turns it into a structured note ready for review and export.
               </div>
 
               <div className="d-flex gap-2 mt-4 flex-wrap">

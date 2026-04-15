@@ -23,6 +23,8 @@ type DiarizedSegment = {
 
 const STORAGE_KEY = "ehrNotes";
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 const extractField = (ehr: string, label: string, fallback: string) => {
   const m = String(ehr || "").match(new RegExp(`^${label}:\\s*(.*)$`, "mi"));
   return (m?.[1] || fallback).trim();
@@ -73,11 +75,11 @@ export default function App() {
         formData.append("language", draft.language);
       }
 
-      const res = await fetch("http://localhost:5000/api/transcribe", {
+      const res = await fetch(`${BASE_URL}/api/transcribe`, {
         method: "POST",
         body: formData,
       });
-
+      
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data?.error || data?.details || "Request failed.");
