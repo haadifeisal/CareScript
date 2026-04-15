@@ -7,6 +7,10 @@ import OpenAI from "openai";
 const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 
+export default app;
+
+const PORT = process.env.PORT || 5000;
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 const openai = new OpenAI({
@@ -148,6 +152,8 @@ app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
 
 /* ================== START ================== */
 
-app.listen(5000, () =>
-  console.log("API running → http://localhost:5000")
-);
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}

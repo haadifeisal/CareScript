@@ -23,7 +23,7 @@ type DiarizedSegment = {
 
 const STORAGE_KEY = "ehrNotes";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const extractField = (ehr: string, label: string, fallback: string) => {
   const m = String(ehr || "").match(new RegExp(`^${label}:\\s*(.*)$`, "mi"));
@@ -79,7 +79,7 @@ export default function App() {
         method: "POST",
         body: formData,
       });
-      
+
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data?.error || data?.details || "Request failed.");
