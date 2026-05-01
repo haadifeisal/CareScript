@@ -66,8 +66,98 @@ class WhisperService {
 }
 
 /* ================== CHATGPT ================== */
-
 class ChatGPTService {
+  static async generateEHR(transcript) {
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `
+You are a medical scribe and clinical coding assistant.
+
+Return ONLY valid JSON.
+
+The JSON must have this shape:
+{
+  "ehr": "string",
+  "diagnoses": [
+    {
+      "label": "string",
+      "codeSystem": "ICD-10",
+      "code": "string",
+      "confidence": "suggested or uncertain",
+      "evidence": ["string"]
+    }
+  ]
+}
+
+Diagnosis codes are suggestions only and must be reviewed by a clinician.
+Only suggest ICD-10 codes supported by the transcript.
+If evidence is insufficient, return an empty diagnoses array.
+            `.trim(),
+          },
+          {
+            role: "user",
+            content: `
+Create a SHORT professional EHR note.
+
+Transcript:
+${transcript}
+
+Rules:
+- If patient name is mentioned, extract it
+- Otherwise use "Unknown"
+- Use this timestamp: ${nowTimestamp()}
+- Provider should be "AI Clinician" unless clearly mentioned
+- Keep the EHR concise
+- Include diagnosis codes inside the EHR under "Diagnosis Codes:"
+- Return only JSON, no markdown
+
+EHR FORMAT:
+
+Patient:
+Date:
+Provider:
+
+Chief Complaint:
+Summary:
+Assessment:
+Diagnosis Codes:
+Plan:
+            `.trim(),
+          },
+        ],
+      });
+
+      const content = completion.choices?.[0]?.message?.content;
+
+      if (!content) {
+        throw new Error("Empty response from ChatGPT");
+      }
+
+      let parsed;
+
+      try {
+        parsed = JSON.parse(content);
+      } catch (e) {
+        console.error("RAW CHATGPT RESPONSE:", content);
+        throw new Error("ChatGPT returned invalid JSON");
+      }
+
+      return {
+        ehr: parsed.ehr || "",
+        diagnoses: Array.isArray(parsed.diagnoses) ? parsed.diagnoses : [],
+      };
+    } catch (err) {
+      console.error("ChatGPT ERROR:", err);
+      throw new Error("ChatGPT generation failed");
+    }
+  }
+}
+/*class ChatGPTService {
   static async generateEHR(transcript) {
     try {
       const completion = await openai.chat.completions.create({
@@ -112,11 +202,78 @@ Plan:
       throw new Error("ChatGPT generation failed");
     }
   }
-}
+}*/
 
 /* ================== ROUTE ================== */
-
 app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No audio uploaded" });
+    }
+
+    const { toFile } = await import("openai/uploads");
+    const audioFile = await toFile(req.file.buffer, "recording.webm");
+
+    // 1. Transcribe audio
+    const whisperResult = await WhisperService.transcribe(audioFile);
+
+    const transcript = whisperResult?.transcript || "";
+    const segments = Array.isArray(whisperResult?.segments)
+      ? whisperResult.segments
+      : [];
+
+    if (!transcript.trim()) {
+      return res.status(400).json({
+        error: "No transcript generated",
+      });
+    }
+
+    // 2. Generate EHR + diagnosis codes
+    const ehrResult = await ChatGPTService.generateEHR(transcript);
+
+    const diagnoses = Array.isArray(ehrResult?.diagnoses)
+      ? ehrResult.diagnoses
+      : [];
+
+    const diagnosisBlock =
+      diagnoses.length > 0
+        ? diagnoses
+            .map((d) => {
+              const label = d.label || "Unknown diagnosis";
+              const codeSystem = d.codeSystem || "ICD-10";
+              const code = d.code || "N/A";
+              return `- ${label} (${codeSystem}: ${code})`;
+            })
+            .join("\n")
+        : "No diagnosis codes suggested.";
+
+    let ehr = ehrResult?.ehr || "";
+
+    if (!/Diagnosis Codes:/i.test(ehr)) {
+      ehr = `
+${ehr}
+
+Diagnosis Codes:
+${diagnosisBlock}
+`.trim();
+    }
+
+    res.json({
+      transcript,
+      segments,
+      ehr,
+      diagnoses,
+    });
+  } catch (err) {
+    console.error("SERVER ERROR:", err);
+
+    res.status(500).json({
+      error: "Processing failed",
+      details: err?.message || "Unknown server error",
+    });
+  }
+});
+/*app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No audio uploaded" });
@@ -150,7 +307,7 @@ app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
       details: err.message,
     });
   }
-});
+});*/
 
 app.get('/health', (req, res) => {
   res.status(200).json({

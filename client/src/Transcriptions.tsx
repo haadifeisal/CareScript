@@ -11,14 +11,32 @@ import {
   Save,
 } from "lucide-react";
 
+type DiagnosisCode = {
+  label: string;
+  codeSystem: "ICD-10";
+  code: string;
+  confidence: "suggested" | "uncertain";
+  evidence: string[];
+};
+
 type SavedNote = {
   id: number;
   patient: string;
   date: string;
   doctor: string;
   ehr: string;
+  diagnoses?: DiagnosisCode[];
   meta?: any;
 };
+
+/*type SavedNote = {
+  id: number;
+  patient: string;
+  date: string;
+  doctor: string;
+  ehr: string;
+  meta?: any;
+};*/
 
 const STORAGE_KEY = "ehrNotes";
 

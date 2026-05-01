@@ -104,8 +104,17 @@ export default function App() {
         date: new Date().toISOString(),
         doctor,
         ehr: data.ehr,
+        diagnoses: data.diagnoses || [],
         meta: draft || null,
       });
+      /*saved.unshift({
+        id: Date.now(),
+        patient,
+        date: new Date().toISOString(),
+        doctor,
+        ehr: data.ehr,
+        meta: draft || null,
+      });*/
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
       setEhrSaved(true);
