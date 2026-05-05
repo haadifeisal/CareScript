@@ -1,6 +1,13 @@
-export { default } from "./pages/CreateNotePage";
-  const nav = useNavigate();
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import type { PatientDraft } from "../types";
 
+type Props = {
+  onProceed: (draft: PatientDraft) => void;
+};
+
+export default function CreateNotePage({ onProceed }: Props) {
+  const nav = useNavigate();
   const [patientName, setPatientName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState<PatientDraft["gender"]>("Male");
@@ -9,14 +16,7 @@ export { default } from "./pages/CreateNotePage";
   const proceed = () => {
     const cleanName = patientName.trim();
     if (!cleanName) return;
-
-    onProceed({
-      patientName: cleanName,
-      age: age.trim(),
-      gender,
-      language,
-    });
-
+    onProceed({ patientName: cleanName, age: age.trim(), gender, language });
     nav("/dashboard/record");
   };
 
@@ -61,7 +61,9 @@ export { default } from "./pages/CreateNotePage";
             </label>
             <select
               value={gender}
-              onChange={(e) => setGender(e.target.value as PatientDraft["gender"])}
+              onChange={(e) =>
+                setGender(e.target.value as PatientDraft["gender"])
+              }
               className="app-select"
             >
               <option value="Male">Male</option>

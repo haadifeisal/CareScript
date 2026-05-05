@@ -1,106 +1,66 @@
 import React, { useMemo } from "react";
-import { Card, Row, Col, Button, Badge } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { getNotes } from "./utils/storage";
 
-const STORAGE_KEY = "ehrNotes";
+const features = [
+  { icon: "", title: "Record the encounter", desc: "Capture history, symptoms, and clinician questions in one flow." },
+  { icon: "", title: "Transcribe with context", desc: "Clear text with punctuation and clinical phrasing support." },
+  { icon: "", title: "Generate structured note", desc: "Assessment + Plan formatted in an EHR-ready template." },
+];
 
-const DashboardHome: React.FC = () => {
-  const notesCount = useMemo(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      return Array.isArray(raw) ? raw.length : 0;
-    } catch {
-      return 0;
-    }
-  }, []);
+export default function DashboardHome() {
+  const notesCount = useMemo(() => getNotes().length, []);
 
   return (
-    <>
-      <Row className="g-3">
-        <Col lg={8}>
-          <Card className="border-0 shadow-sm" style={{ borderRadius: 18 }}>
-            <Card.Body className="p-4 p-md-5">
-              <div className="d-flex align-items-center gap-2 mb-2">
-                <Badge bg="light" text="dark" className="border">
-                  Doctor–patient workflow
-                </Badge>
-                <Badge bg="light" text="dark" className="border">
-                  Audio → EHR
-                </Badge>
-              </div>
+    <div className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="page-card">
+          <div className="page-card-body">
+            <div className="flex flex-wrap gap-2">
+              <span className="pill">Doctorpatient workflow</span>
+              <span className="pill">Audio  EHR</span>
+            </div>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
+              Create clean clinical notesfast.
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-7 text-slate-500">
+              Start by adding patient details, then record the encounter. CareScript transcribes and turns it into a structured note ready for review and export.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link to="/dashboard/create" className="btn-primary">Create new note</Link>
+              <Link to="/dashboard/notes" className="btn-secondary">View previous notes</Link>
+            </div>
+          </div>
+        </div>
 
-              <h2 className="fw-bold mb-2" style={{ lineHeight: 1.1 }}>
-                Create clean clinical notes—fast.
-              </h2>
-              <div className="text-muted" style={{ maxWidth: 620, lineHeight: 1.7 }}>
-                Start by adding patient details, then record the encounter. CareScript transcribes and turns it into a structured note ready for review and export.
-              </div>
+        <div className="page-card">
+          <div className="page-card-body">
+            <div className="text-sm text-slate-500">Saved notes</div>
+            <div className="mt-1 text-4xl font-bold text-slate-900">{notesCount}</div>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Your generated EHR notes are stored locally and available under "Notes".
+            </p>
+            <div className="mt-3 rounded-2xl border border-blue-100 bg-blue-50 p-3">
+              <div className="text-sm font-semibold text-slate-800">Tip</div>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                Keep recordings concise (one visit at a time) for best note quality.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <div className="d-flex gap-2 mt-4 flex-wrap">
-                <Button as={Link} to="/dashboard/create" variant="success" size="lg" style={{ borderRadius: 12, paddingInline: 18 }}>
-                  Create new note
-                </Button>
-                <Button as={Link} to="/dashboard/notes" variant="outline-primary" size="lg" style={{ borderRadius: 12, paddingInline: 18 }}>
-                  View previous notes
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col lg={4}>
-          <Card className="border-0 shadow-sm h-100" style={{ borderRadius: 18 }}>
-            <Card.Body className="p-4">
-              <div className="text-muted mb-1">Saved notes</div>
-              <div className="fw-bold" style={{ fontSize: 34 }}>{notesCount}</div>
-              <div className="text-muted mt-2" style={{ lineHeight: 1.6 }}>
-                Your generated EHR notes are stored locally and available under “Previous Notes”.
-              </div>
-
-              <div className="mt-3 p-3 rounded-4" style={{ background: "rgba(13,110,253,0.06)", border: "1px solid rgba(13,110,253,0.14)" }}>
-                <div className="fw-semibold mb-1">Tip</div>
-                <div className="text-muted small" style={{ lineHeight: 1.6 }}>
-                  Keep recordings concise (one visit at a time) for best note quality.
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row className="g-3 mt-1">
-        {[
-          { title: "Record the encounter", desc: "Capture history, symptoms, and clinician questions in one flow.", icon: "🎙️" },
-          { title: "Transcribe with context", desc: "Clear text with punctuation and clinical phrasing support.", icon: "🧠" },
-          { title: "Generate structured note", desc: "Assessment + Plan formatted in an EHR-ready template.", icon: "🧾" },
-        ].map((f) => (
-          <Col md={4} key={f.title}>
-            <Card className="border-0 shadow-sm h-100" style={{ borderRadius: 18 }}>
-              <Card.Body className="p-4">
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 14,
-                    display: "grid",
-                    placeItems: "center",
-                    background: "rgba(13,110,253,0.10)",
-                    border: "1px solid rgba(13,110,253,0.18)",
-                    fontSize: 18,
-                    marginBottom: 10,
-                  }}
-                >
-                  {f.icon}
-                </div>
-                <div className="fw-bold">{f.title}</div>
-                <div className="text-muted mt-2">{f.desc}</div>
-              </Card.Body>
-            </Card>
-          </Col>
+      <div className="grid gap-4 md:grid-cols-3">
+        {features.map((f) => (
+          <div key={f.title} className="page-card">
+            <div className="page-card-body">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-lg">{f.icon}</div>
+              <div className="mt-3 text-sm font-semibold text-slate-900">{f.title}</div>
+              <p className="mt-1 text-sm text-slate-500">{f.desc}</p>
+            </div>
+          </div>
         ))}
-      </Row>
-    </>
+      </div>
+    </div>
   );
-};
-
-export default DashboardHome;
+}

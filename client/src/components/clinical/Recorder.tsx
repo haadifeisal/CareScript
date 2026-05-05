@@ -1,9 +1,13 @@
-export { default } from "./components/clinical/Recorder";
-
-type DiarizedSegment = {
-  speaker?: string;
-  text?: string;
-};
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  CheckCircle2,
+  Loader2,
+  Mic,
+  Square,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react";
+import type { DiarizedSegment } from "../../types";
 
 interface RecorderProps {
   onFinished?: (audioBlob: Blob) => void;
@@ -14,14 +18,14 @@ interface RecorderProps {
   ehrSaved?: boolean;
 }
 
-// Sub-component for the live waveform
 function LiveVisualizer({ stream }: { stream: MediaStream | null }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!stream || !canvasRef.current) return;
 
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioCtx = new (window.AudioContext ||
+      (window as any).webkitAudioContext)();
     const source = audioCtx.createMediaStreamSource(stream);
     const analyser = audioCtx.createAnalyser();
     analyser.fftSize = 256;
@@ -45,8 +49,7 @@ function LiveVisualizer({ stream }: { stream: MediaStream | null }) {
 
       for (let i = 0; i < bufferLength; i++) {
         const barHeight = (dataArray[i] / 255) * canvas.height;
-        // Clinical blue/teal gradient
-        ctx.fillStyle = `rgb(59, 130, 246)`; 
+        ctx.fillStyle = `rgb(59, 130, 246)`;
         ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
         x += barWidth + 1;
       }
@@ -59,7 +62,9 @@ function LiveVisualizer({ stream }: { stream: MediaStream | null }) {
     };
   }, [stream]);
 
-  return <canvas ref={canvasRef} width={200} height={40} className="opacity-60" />;
+  return (
+    <canvas ref={canvasRef} width={200} height={40} className="opacity-60" />
+  );
 }
 
 export default function Recorder({
@@ -70,7 +75,9 @@ export default function Recorder({
   error,
   ehrSaved,
 }: RecorderProps) {
-  const [status, setStatus] = useState<"ready" | "recording" | "finished">("ready");
+  const [status, setStatus] = useState<"ready" | "recording" | "finished">(
+    "ready"
+  );
   const [seconds, setSeconds] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -81,10 +88,7 @@ export default function Recorder({
   const timerRef = useRef<number | null>(null);
 
   const fmt = (s: number) =>
-    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(
-      2,
-      "0"
-    )}`;
+    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const speakerLabel = useMemo(() => {
     const uniq: string[] = [];
@@ -105,10 +109,7 @@ export default function Recorder({
       return segments
         .filter((s) => (s.text ?? "").trim())
         .slice(0, 12)
-        .map((s) => ({
-          role: speakerLabel(s.speaker),
-          text: (s.text ?? "").trim(),
-        }));
+        .map((s) => ({ role: speakerLabel(s.speaker), text: (s.text ?? "").trim() }));
     }
     const t = transcript.trim();
     return t ? [{ role: "TRANSCRIPT", text: t }] : [];
@@ -125,9 +126,7 @@ export default function Recorder({
       timerRef.current = null;
     }
     try {
-      if (recRef.current?.state === "recording") {
-        recRef.current.stop();
-      }
+      if (recRef.current?.state === "recording") recRef.current.stop();
     } catch {}
     stopTracks();
   };
@@ -162,7 +161,10 @@ export default function Recorder({
     rec.start();
     setStatus("recording");
     setSeconds(0);
-    timerRef.current = window.setInterval(() => setSeconds((prev) => prev + 1), 1000);
+    timerRef.current = window.setInterval(
+      () => setSeconds((prev) => prev + 1),
+      1000
+    );
   };
 
   const stop = () => recRef.current?.stop();
@@ -181,8 +183,6 @@ export default function Recorder({
     onFinished?.(audioBlob);
   };
 
-  const showAudio = status === "finished" && audioBlob;
-
   return (
     <div className="mx-auto w-full max-w-4xl">
       <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
@@ -200,11 +200,9 @@ export default function Recorder({
 
         <div className="my-8 flex flex-col items-center gap-4">
           <div className="relative">
-            {/* Pulsing Outer Glow */}
             {status === "recording" && (
-              <div className="absolute inset-0 animate-ping rounded-full bg-red-400 opacity-20"></div>
+              <div className="absolute inset-0 animate-ping rounded-full bg-red-400 opacity-20" />
             )}
-            
             <div
               className={[
                 "relative flex h-24 w-24 items-center justify-center rounded-full border transition-all duration-500",
@@ -215,14 +213,19 @@ export default function Recorder({
             >
               <Mic
                 size={30}
-                className={status === "recording" ? "text-red-600 animate-pulse" : "text-blue-600"}
+                className={
+                  status === "recording"
+                    ? "text-red-600 animate-pulse"
+                    : "text-blue-600"
+                }
               />
             </div>
           </div>
 
-          {/* Waveform Visualization */}
           <div className="h-10">
-            {status === "recording" && <LiveVisualizer stream={streamRef.current} />}
+            {status === "recording" && (
+              <LiveVisualizer stream={streamRef.current} />
+            )}
           </div>
         </div>
 
@@ -279,7 +282,7 @@ export default function Recorder({
           {status === "ready" && "Ready"}
           {status === "recording" && (
             <span className="flex items-center justify-center gap-2 font-medium text-red-600">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-red-600"></span>
+              <span className="h-2 w-2 animate-pulse rounded-full bg-red-600" />
               Live Recording...
             </span>
           )}
@@ -291,9 +294,13 @@ export default function Recorder({
           )}
         </div>
 
-        {showAudio && audioBlob && (
+        {status === "finished" && audioBlob && (
           <div className="mx-auto mt-5 max-w-2xl">
-            <audio controls className="w-full" src={URL.createObjectURL(audioBlob)} />
+            <audio
+              controls
+              className="w-full"
+              src={URL.createObjectURL(audioBlob)}
+            />
           </div>
         )}
 
@@ -312,7 +319,9 @@ export default function Recorder({
 
       {showPreview && (
         <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-slate-900">Live preview</h3>
+          <h3 className="text-base font-semibold text-slate-900">
+            Live preview
+          </h3>
           <div className="mt-4 max-h-80 overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4">
             {isTranscribing && preview.length === 0 ? (
               <div className="flex items-center justify-center py-8 text-slate-500">
@@ -323,7 +332,10 @@ export default function Recorder({
             ) : (
               <div className="space-y-3">
                 {preview.map((line, index) => (
-                  <div key={index} className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                  <div
+                    key={index}
+                    className="grid grid-cols-[88px_minmax(0,1fr)] gap-3"
+                  >
                     <div className="text-right text-[11px] font-semibold tracking-[0.14em] text-slate-400">
                       {line.role}
                     </div>

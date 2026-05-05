@@ -1,4 +1,7 @@
-export { default } from "./pages/RecordNotePage";
+import React from "react";
+import { RotateCcw } from "lucide-react";
+import Recorder from "../components/clinical/Recorder";
+import type { PatientDraft, DiarizedSegment } from "../types";
 
 type Props = {
   draft: PatientDraft;
@@ -11,7 +14,7 @@ type Props = {
   ehrSaved: boolean;
 };
 
-export default function RecordNote({
+export default function RecordNotePage({
   draft,
   onClearDraft,
   onFinished,
@@ -38,7 +41,11 @@ export default function RecordNote({
             </div>
           </div>
 
-          <button type="button" onClick={onClearDraft} className="btn-secondary">
+          <button
+            type="button"
+            onClick={onClearDraft}
+            className="btn-secondary"
+          >
             <RotateCcw size={16} />
             Reset Patient
           </button>

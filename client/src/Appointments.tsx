@@ -1,29 +1,4 @@
-import React, { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  CalendarDays,
-  ChevronRight,
-  Mic,
-  User,
-  Languages,
-  FileText,
-} from "lucide-react";
-import type { PatientDraft } from "./App";
-
-type Props = {
-  onAiscribe: (draft: PatientDraft) => void;
-};
-
-type Appointment = {
-  id: string;
-  name: string;
-  gender: "Male" | "Female";
-  age: string;
-  date: string;
-  language: "sv" | "en";
-  template: "Routine Checkup" | "Follow-up" | "Consultation";
-  dob: string;
-};
+export { default } from "./pages/AppointmentsPage";
 
 const APPTS: Appointment[] = [
   {
